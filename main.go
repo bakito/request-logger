@@ -18,13 +18,15 @@ var counter uint64
 
 var handler = func() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		atomic.AddUint64(&counter, 1)
+		count := atomic.AddUint64(&counter, 1)
 		dump, err := httputil.DumpRequest(r, true)
 		if err != nil {
 			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("Request %v:\n%s\n\n", counter, dump)
+		log.Printf("Request-No: %v\n%s\n\n", count, dump)
+
+		w.Header().Set("Request-No", fmt.Sprintf("%v", count))
 	})
 }
 

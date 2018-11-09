@@ -5,12 +5,11 @@ WORKDIR /go/src/github.com/bakito/request-logger
 COPY ./* /go/src/github.com/bakito/request-logger/
 
 RUN apt-get update && apt-get install -y xz-utils && \
-  curl -s -L  https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz -o upx.tar.xz && \
-  tar -xJf upx.tar.xz --strip=1 upx-3.95-amd64_linux/upx
+  curl -SL --fail --silent --show-error https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz | tar --wildcards -xJ --strip-components 1 */upx
 
 
 RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-w -s" -o request-logger && \
-  ./upx --ultra-brute request-logger
+  ./upx --ultra-brute -q request-logger
 
 # application image
 

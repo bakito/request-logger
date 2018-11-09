@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y xz-utils && \
 
 
 RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -ldflags="-w -s" -o request-logger && \
-  ./upx request-logger
+  ./upx --ultra-brute request-logger
 
 # application image
 

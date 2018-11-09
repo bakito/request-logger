@@ -1,3 +1,5 @@
+[![Docker Repository on Quay](https://quay.io/repository/bakito/request-logger/status "Docker Repository on Quay")](https://quay.io/repository/bakito/request-logger)
+
 # Request Logger
 
 A small go webserver logging all requests
@@ -5,7 +7,7 @@ A small go webserver logging all requests
 ## Run
 
 ```bash
-docker run -p 8080:8080 bakito/request-logger
+docker run -p 8080:8080 quay.io/bakito/request-logger
 ```
 
 ## Paths

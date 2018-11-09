@@ -8,6 +8,17 @@ A small go webserver logging all requests
 docker run -p 8080:8080 bakito/request-logger
 ```
 
+## Paths
+
+### Echo
+
+To get the request also visualized in the response call any url with sub-path **/echo**. This retuns the request dump values also in the response.
+
+### Custom Response Code
+
+To get a custom response code (2xx, 4xx or 5xx) call any url with sub path **/response-code/{code}**.
+
+
 ## Output
 
 The output is simply generated with https://golang.org/pkg/net/http/httputil/#DumpRequest

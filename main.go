@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"math/rand"
@@ -14,17 +15,45 @@ import (
 )
 
 const (
-	port  int = 8080
-	reqNo     = "Request-No"
+	defaultPort int = 8080
+	reqNo           = "Request-No"
 )
 
 var counter uint64
+
+func main() {
+
+	port := flag.Int("port", defaultPort, "the server port")
+
+	flag.Parse()
+
+	atomic.AddUint64(&counter, 0)
+	r := mux.NewRouter()
+	r.HandleFunc("/echo", echo)
+	r.HandleFunc("/echo/{path:.*}", echo)
+
+	r.HandleFunc(`/code/{code:[2,4,5]\d\d}`, responseCode)
+	r.HandleFunc(`/code/{code:[2,4,5]\d\d}/{path:.*}`, responseCode)
+
+	r.HandleFunc(`/random/code/{code:[2,4,5]\d\d}/{perc:1|(?:0(?:\.\d*)?)}`, randomCode)
+	r.HandleFunc(`/random/code/{code:[2,4,5]\d\d}/{perc:1|(?:0(?:\.\d*)?)}/{path:.*}`, randomCode)
+
+	r.HandleFunc(`/random/sleep/{sleep:\d+}`, randomSleep)
+	r.HandleFunc(`/random/sleep/{sleep:\d+}/{path:.*}`, randomSleep)
+
+	r.HandleFunc("/{path:.*}", void)
+
+	r.Use(loggingMiddleware)
+
+	log.Printf("Running on port %v ...", *port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", *port), r))
+}
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		count := atomic.AddUint64(&counter, 1)
 
-		log.Printf("%v: %v\n%s\n\n", reqNo, count, dump(r))
+		log.Printf("%v: %v\n%s\n", reqNo, count, dump(r))
 
 		w.Header().Set(reqNo, fmt.Sprintf("%v", count))
 		next.ServeHTTP(w, r)
@@ -69,30 +98,6 @@ func randomSleep(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v: %v Sleep: %dms\n", reqNo, w.Header()[reqNo][0], random)
 	time.Sleep(time.Duration(random) * time.Millisecond)
 	log.Printf("%v: %v Sleep: done\n", reqNo, w.Header()[reqNo][0])
-}
-
-func main() {
-
-	atomic.AddUint64(&counter, 0)
-	r := mux.NewRouter()
-	r.HandleFunc("/echo", echo)
-	r.HandleFunc("/echo/{path:.*}", echo)
-
-	r.HandleFunc(`/code/{code:[2,4,5]\d\d}`, responseCode)
-	r.HandleFunc(`/code/{code:[2,4,5]\d\d}/{path:.*}`, responseCode)
-
-	r.HandleFunc(`/random/code/{code:[2,4,5]\d\d}/{perc:1|(?:0(?:\.\d*)?)}`, randomCode)
-	r.HandleFunc(`/random/code/{code:[2,4,5]\d\d}/{perc:1|(?:0(?:\.\d*)?)}/{path:.*}`, randomCode)
-
-	r.HandleFunc(`/random/sleep/{sleep:\d+}`, randomSleep)
-	r.HandleFunc(`/random/sleep/{sleep:\d+}/{path:.*}`, randomSleep)
-
-	r.HandleFunc("/{path:.*}", void)
-
-	r.Use(loggingMiddleware)
-
-	log.Printf("Running on port %v ...", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", port), r))
 }
 
 func dump(r *http.Request) string {

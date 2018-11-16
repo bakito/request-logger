@@ -53,3 +53,10 @@ User-Agent: curl/7.61.1
 
 <body>
 ```
+
+## Setup on Openshift
+
+```bash
+oc process -f openshift\openshift-template.yaml -p NAME=request-logger | oc apply -f -
+
+```

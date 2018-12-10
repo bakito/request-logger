@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -19,7 +20,11 @@ const (
 	reqNo           = "Request-No"
 )
 
-var counter uint64
+var (
+	counter           uint64
+	replayBody        = map[string][]byte{}
+	replayContentType = map[string]string{}
+)
 
 func main() {
 
@@ -40,6 +45,9 @@ func main() {
 
 	r.HandleFunc(`/random/sleep/{sleep:\d+}`, randomSleep)
 	r.HandleFunc(`/random/sleep/{sleep:\d+}/{path:.*}`, randomSleep)
+
+	r.HandleFunc(`/replay`, replay)
+	r.HandleFunc(`/replay/{path:.*}`, replay)
 
 	r.HandleFunc("/{path:.*}", void)
 
@@ -98,6 +106,25 @@ func randomSleep(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%v: %v Sleep: %dms\n", reqNo, w.Header()[reqNo][0], random)
 	time.Sleep(time.Duration(random) * time.Millisecond)
 	log.Printf("%v: %v Sleep: done\n", reqNo, w.Header()[reqNo][0])
+}
+
+func replay(w http.ResponseWriter, r *http.Request) {
+	train := r.Header.Get("REPLAY_TRAIN")
+
+	if train == "true" {
+		body, err := ioutil.ReadAll(r.Body)
+		if err == nil {
+			replayBody[r.RequestURI] = body
+		}
+		replayContentType[r.RequestURI] = r.Header.Get("Content-Type")
+	}
+
+	if t, ok := replayContentType[r.RequestURI]; ok {
+		w.Header().Set("Content-Type", t)
+	}
+	if b, ok := replayBody[r.RequestURI]; ok {
+		w.Write(b)
+	}
 }
 
 func dump(r *http.Request) string {

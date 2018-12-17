@@ -17,8 +17,10 @@ import (
 )
 
 const (
-	defaultPort int = 8080
-	reqNo           = "Request-No"
+	defaultPort       int = 8080
+	reqNo                 = "Request-No"
+	headerReplayTrain     = "REPLAY_TRAIN"
+	headerCurrCount       = "CURRENT_COUNT"
 )
 
 var (
@@ -69,7 +71,12 @@ func loggingMiddleware(next http.Handler) http.Handler {
 			counter = v.(*uint64)
 		}
 
-		count := atomic.AddUint64(counter, 1)
+		currCount := r.Header.Get(headerCurrCount)
+
+		count := *counter
+		if currCount == "" {
+			count = atomic.AddUint64(counter, 1)
+		}
 
 		log.Printf("%v: %v\n%s\n", reqNo, count, dump(r))
 
@@ -119,7 +126,7 @@ func randomSleep(w http.ResponseWriter, r *http.Request) {
 }
 
 func replay(w http.ResponseWriter, r *http.Request) {
-	train := r.Header.Get("REPLAY_TRAIN")
+	train := r.Header.Get(headerReplayTrain)
 
 	if train == "true" {
 		body, err := ioutil.ReadAll(r.Body)

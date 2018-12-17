@@ -2,7 +2,7 @@ FROM golang:1.11 as builder
 
 WORKDIR /go/src/github.com/bakito/request-logger
 
-COPY ./* /go/src/github.com/bakito/request-logger/
+COPY . /go/src/github.com/bakito/request-logger/
 
 RUN apt-get update && apt-get install -y xz-utils && \
   curl -SL --fail --silent --show-error https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz | tar --wildcards -xJ --strip-components 1 */upx

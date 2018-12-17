@@ -7,24 +7,20 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"net/http/httputil"
 	"strconv"
-	"sync"
-	"sync/atomic"
 	"time"
 
+	"github.com/bakito/request-logger/common"
+	"github.com/bakito/request-logger/middleware"
 	"github.com/gorilla/mux"
 )
 
 const (
 	defaultPort       int = 8080
-	reqNo                 = "Request-No"
 	headerTrainReplay     = "Train-Replay"
-	headerCurrCount       = "Current-Count"
 )
 
 var (
-	counters          sync.Map
 	replayBody        = map[string][]byte{}
 	replayContentType = map[string]string{}
 )
@@ -53,41 +49,15 @@ func main() {
 
 	r.HandleFunc("/{path:.*}", void)
 
-	r.Use(loggingMiddleware)
+	r.Use(middleware.LogRequest, middleware.CountReqRows)
 
 	log.Printf("Running on port %v ...", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", *port), r))
 }
 
-func loggingMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		var counter *uint64
-		if v, ok := counters.Load(r.RequestURI); ok {
-			counter = v.(*uint64)
-		} else {
-			counter = new(uint64)
-			v, _ := counters.LoadOrStore(r.RequestURI, counter)
-			counter = v.(*uint64)
-		}
-
-		currCount := r.Header.Get(headerCurrCount)
-
-		count := *counter
-		if currCount == "" {
-			count = atomic.AddUint64(counter, 1)
-		}
-
-		log.Printf("%v: %v\n%s\n", reqNo, count, dump(r))
-
-		w.Header().Set(reqNo, fmt.Sprintf("%v", count))
-		next.ServeHTTP(w, r)
-	})
-}
-
 func echo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	fmt.Fprint(w, dump(r))
+	fmt.Fprint(w, common.Dump(r))
 }
 
 func void(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +66,7 @@ func void(w http.ResponseWriter, r *http.Request) {
 func responseCode(w http.ResponseWriter, r *http.Request) {
 	code, _ := strconv.Atoi(mux.Vars(r)["code"])
 	w.WriteHeader(code)
-	log.Printf("%v: %v Code: %v\n", reqNo, w.Header()[reqNo][0], code)
+	log.Printf("%v: %v Code: %v\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], code)
 }
 
 func randomCode(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +82,7 @@ func randomCode(w http.ResponseWriter, r *http.Request) {
 		code = 200
 	}
 
-	log.Printf("%v: %v Code: %v\n", reqNo, w.Header()[reqNo][0], code)
+	log.Printf("%v: %v Code: %v\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], code)
 }
 
 func randomSleep(w http.ResponseWriter, r *http.Request) {
@@ -120,9 +90,9 @@ func randomSleep(w http.ResponseWriter, r *http.Request) {
 
 	random := rand.Intn(sleep)
 
-	log.Printf("%v: %v Sleep: %dms\n", reqNo, w.Header()[reqNo][0], random)
+	log.Printf("%v: %v Sleep: %dms\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], random)
 	time.Sleep(time.Duration(random) * time.Millisecond)
-	log.Printf("%v: %v Sleep: done\n", reqNo, w.Header()[reqNo][0])
+	log.Printf("%v: %v Sleep: done\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0])
 }
 
 func replay(w http.ResponseWriter, r *http.Request) {
@@ -142,12 +112,4 @@ func replay(w http.ResponseWriter, r *http.Request) {
 	if b, ok := replayBody[r.RequestURI]; ok {
 		w.Write(b)
 	}
-}
-
-func dump(r *http.Request) string {
-	dump, err := httputil.DumpRequest(r, true)
-	if err != nil {
-		return ""
-	}
-	return string(dump)
 }

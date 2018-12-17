@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -21,7 +22,7 @@ const (
 )
 
 var (
-	counter           uint64
+	counters          sync.Map
 	replayBody        = map[string][]byte{}
 	replayContentType = map[string]string{}
 )
@@ -32,7 +33,6 @@ func main() {
 
 	flag.Parse()
 
-	atomic.AddUint64(&counter, 0)
 	r := mux.NewRouter()
 	r.HandleFunc("/echo", echo)
 	r.HandleFunc("/echo/{path:.*}", echo)
@@ -59,7 +59,17 @@ func main() {
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		count := atomic.AddUint64(&counter, 1)
+
+		var counter *uint64
+		if v, ok := counters.Load(r.RequestURI); ok {
+			counter = v.(*uint64)
+		} else {
+			counter = new(uint64)
+			v, _ := counters.LoadOrStore(r.RequestURI, counter)
+			counter = v.(*uint64)
+		}
+
+		count := atomic.AddUint64(counter, 1)
 
 		log.Printf("%v: %v\n%s\n", reqNo, count, dump(r))
 

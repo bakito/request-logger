@@ -35,6 +35,13 @@ To get a response wit a random delay call any url with sub path **/random/sleep/
 
 - sleep: the may amount of milliseconds to sleep
 
+### Replay Mode
+
+Predefined responses (content-type and body) can be returned on the path **/replay**.  
+To train a response, send a request to the same url with the content-type and body to be returned later. Set the request header **Train-Replay** to **true** for the training request.  
+The all following request to this url will get the same content-type and body as it was trained before.
+
+
 ## Output
 
 The output is simply generated with https://golang.org/pkg/net/http/httputil/#DumpRequest

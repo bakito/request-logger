@@ -19,8 +19,8 @@ import (
 const (
 	defaultPort       int = 8080
 	reqNo                 = "Request-No"
-	headerReplayTrain     = "REPLAY_TRAIN"
-	headerCurrCount       = "CURRENT_COUNT"
+	headerTrainReplay     = "Train-Replay"
+	headerCurrCount       = "Current-Count"
 )
 
 var (
@@ -126,7 +126,7 @@ func randomSleep(w http.ResponseWriter, r *http.Request) {
 }
 
 func replay(w http.ResponseWriter, r *http.Request) {
-	train := r.Header.Get(headerReplayTrain)
+	train := r.Header.Get(headerTrainReplay)
 
 	if train == "true" {
 		body, err := ioutil.ReadAll(r.Body)

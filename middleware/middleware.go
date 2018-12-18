@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/namsral/flag"
 
 	"github.com/bakito/request-logger/common"
 	"github.com/prometheus/client_golang/prometheus"

@@ -9,6 +9,7 @@ require (
 	github.com/google/pprof v0.0.0-20181206194817-3ea8567a2e57 // indirect
 	github.com/gorilla/mux v1.6.2
 	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
+	github.com/namsral/flag v1.7.4-pre
 	github.com/opentracing-contrib/go-stdlib v0.0.0-20181213181119-09659152d0aa // indirect
 	github.com/opentracing/opentracing-go v1.0.2 // indirect
 	github.com/pkg/errors v0.8.0 // indirect

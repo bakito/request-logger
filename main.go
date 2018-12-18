@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,6 +12,7 @@ import (
 	"github.com/bakito/request-logger/common"
 	"github.com/bakito/request-logger/middleware"
 	"github.com/gorilla/mux"
+	"github.com/namsral/flag"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 

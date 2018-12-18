@@ -5,40 +5,36 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
-	"sync/atomic"
 
 	"github.com/bakito/request-logger/common"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 )
 
 const (
 	headerCurrCount    = "Current-Count"
-	headerCountReqRows = "Count-Request-Rows"
 	headerTotalReqRows = "Total-Request-Rows"
 )
 
 var (
-	reqCounters    sync.Map
-	reqRowCounters sync.Map
+	reqRowCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "request_body_row_count",
+		Help: "The current count rows in request body",
+	}, []string{"path"})
+	currCount = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "request_current_count",
+		Help: "The current count of requests by path",
+	}, []string{"path"})
 )
+
+func init() {
+	prometheus.MustRegister(currCount, reqRowCount)
+}
 
 func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		var counter *uint64
-		if v, ok := reqCounters.Load(r.RequestURI); ok {
-			counter = v.(*uint64)
-		} else {
-			v, _ := reqCounters.LoadOrStore(r.RequestURI, new(uint64))
-			counter = v.(*uint64)
-		}
-
-		currCount := r.Header.Get(headerCurrCount)
-
-		count := *counter
-		if currCount == "" {
-			count = atomic.AddUint64(counter, 1)
-		}
+		count := inc(currCount, r)
 
 		log.Printf("%v: %v\n%s\n", common.HeaderReqNo, count, common.Dump(r))
 
@@ -49,25 +45,28 @@ func LogRequest(next http.Handler) http.Handler {
 
 func CountReqRows(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cnt := r.Header.Get(headerCountReqRows)
 
-		if cnt == "true" {
-			reqRowCounters.Store(r.RequestURI, new(uint64))
-		} else if v, ok := reqRowCounters.Load(r.RequestURI); ok {
-
-			var lines uint64
-			scanner := bufio.NewScanner(r.Body)
-			for scanner.Scan() {
-				lines++
-			}
-
-			counter := v.(*uint64)
-
-			allLines := atomic.AddUint64(counter, uint64(lines))
-
-			w.Header().Set(headerTotalReqRows, fmt.Sprintf("%v", allLines))
+		var lines float64
+		scanner := bufio.NewScanner(r.Body)
+		for scanner.Scan() {
+			lines++
+			fmt.Println(scanner.Text())
 		}
+
+		allLines := add(reqRowCount, r, lines)
+		w.Header().Set(headerTotalReqRows, fmt.Sprintf("%v", allLines))
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func inc(cVec *prometheus.CounterVec, r *http.Request) float64 {
+	return add(cVec, r, 1)
+}
+func add(cVec *prometheus.CounterVec, r *http.Request, value float64) float64 {
+	c := cVec.WithLabelValues(r.RequestURI)
+	c.Add(value)
+	pb := &dto.Metric{}
+	c.Write(pb)
+	return pb.GetCounter().GetValue()
 }

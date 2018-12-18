@@ -13,6 +13,7 @@ import (
 	"github.com/bakito/request-logger/common"
 	"github.com/bakito/request-logger/middleware"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
@@ -26,12 +27,14 @@ var (
 )
 
 func main() {
-
 	port := flag.Int("port", defaultPort, "the server port")
 
 	flag.Parse()
 
 	r := mux.NewRouter()
+
+	r.Handle("/metrics", promhttp.Handler())
+
 	r.HandleFunc("/echo", echo)
 	r.HandleFunc("/echo/{path:.*}", echo)
 

@@ -28,6 +28,7 @@ var (
 
 func main() {
 	port := flag.Int("port", defaultPort, "the server port")
+	countRequestRows := flag.Bool("countRequestRows", true, "Enable or disable the request row count")
 
 	flag.Parse()
 
@@ -52,7 +53,10 @@ func main() {
 
 	r.HandleFunc("/{path:.*}", void)
 
-	r.Use(middleware.LogRequest, middleware.CountReqRows)
+	r.Use(middleware.LogRequest)
+	if *countRequestRows {
+		r.Use(middleware.CountReqRows)
+	}
 
 	log.Printf("Running on port %v ...", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", *port), r))

@@ -1,4 +1,4 @@
-[![Docker Repository on Quay](https://quay.io/repository/bakito/request-logger/status "Docker Repository on Quay")](https://quay.io/repository/bakito/request-logger)
+[![Docker Repository on Quay](https://quay.io/repository/bakito/request-logger/status "Docker Repository on Quay")](https://quay.io/repository/bakito/request-logger) [![Go Report Card](https://goreportcard.com/badge/github.com/bakito/request-logger)](https://goreportcard.com/report/github.com/bakito/request-logger)
 
 # Request Logger
 

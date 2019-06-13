@@ -1,8 +1,10 @@
 package common
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 )
 
 const (
@@ -14,5 +16,18 @@ func Dump(r *http.Request) string {
 	if err != nil {
 		return ""
 	}
-	return string(dump)
+
+	req := string(dump)
+
+	if r.RemoteAddr != "" {
+		// add remote addre after Host if available, otherwise after the first line
+		hi := strings.Index(req, "Host:")
+		if hi < 0 {
+			hi = 0
+		}
+		host := req[hi:]
+		afterHost := strings.Index(host, "\r\n")
+		req = fmt.Sprintf("%s\r\nRemoteAddr: %s%s", req[:hi+afterHost], r.RemoteAddr, req[hi+afterHost:])
+	}
+	return req
 }

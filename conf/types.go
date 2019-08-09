@@ -1,15 +1,15 @@
 package conf
 
 import (
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"log"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Conf struct {
-	Echo     []string    `yaml:"echo"`
-	EchoBody []string    `yaml:"echoBody"`
-	Replay   [] Response `yaml:"replay"`
+	Echo     []string   `yaml:"echo"`
+	EchoBody []string   `yaml:"echoBody"`
+	Replay   []Response `yaml:"replay"`
 }
 
 type Response struct {
@@ -18,19 +18,15 @@ type Response struct {
 	ContentType string `yaml:"contentType"`
 }
 
-func GetConf() *Conf {
+func GetConf(configFile string) (*Conf, error) {
 
-	yamlFile, err := ioutil.ReadFile("conf.yaml")
+	yamlFile, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	c := &Conf{}
 
 	err = yaml.Unmarshal(yamlFile, c)
-	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
-		return nil
-	}
 
-	return c
+	return c, err
 }

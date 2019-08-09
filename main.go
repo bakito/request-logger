@@ -1,19 +1,22 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"github.com/bakito/request-logger/conf"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
+
+	"github.com/bakito/request-logger/conf"
 
 	"github.com/bakito/request-logger/common"
 	"github.com/bakito/request-logger/middleware"
 	"github.com/gorilla/mux"
-	"github.com/namsral/flag"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -30,39 +33,52 @@ var (
 func main() {
 	port := flag.Int("port", defaultPort, "the server port")
 	countRequestRows := flag.Bool("countRequestRows", true, "Enable or disable the request row count")
+	configFile := flag.String("config", "", "The path of a config file")
 
 	flag.Parse()
 
 	r := mux.NewRouter()
 
-	config := conf.GetConf()
+	r.Handle("/metrics", promhttp.Handler())
+
+	var config *conf.Conf
+	var err error
+
+	if configFile != nil && *configFile != "" {
+		config, err = conf.GetConf(*configFile)
+		if err != nil {
+			log.Fatalf("Error reading config %s: %v", *configFile, err)
+			return
+		}
+	}
+
+	functions := make(map[string]func(w http.ResponseWriter, r *http.Request))
+	var paths []string
+
 	if config != nil {
 
 		for _, path := range config.Echo {
-			r.HandleFunc(path, echo)
+			functions[path] = echo
+			paths = append(paths, path)
 		}
 		for _, path := range config.EchoBody {
-			r.HandleFunc(path, body)
+			functions[path] = body
+			paths = append(paths, path)
 		}
 
 		for _, resp := range config.Replay {
-			r.HandleFunc(resp.Path, func(w http.ResponseWriter, r *http.Request) {
-				if resp.ContentType != "" {
-					w.Header().Set("Content-Type", resp.ContentType)
-				} else {
-					w.Header().Set("Content-Type", "text/plain")
-				}
-				_, err := w.Write([]byte(resp.Content))
-				if err != nil {
-					w.WriteHeader(http.StatusOK)
-				} else {
-					w.WriteHeader(http.StatusOK)
-				}
-			})
+			functions[resp.Path] = configReplay(resp)
+			paths = append(paths, resp.Path)
 		}
-	} else {
-		r.Handle("/metrics", promhttp.Handler())
 
+		sortPaths(paths)
+
+		log.Printf("Serving custom config from '%s'", *configFile)
+		for _, p := range paths {
+			r.HandleFunc(p, functions[p])
+		}
+
+	} else {
 		r.HandleFunc("/echo", echo)
 		r.HandleFunc("/echo/{path:.*}", echo)
 
@@ -91,10 +107,32 @@ func main() {
 	log.Printf("Running on port %v ...", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", *port), r))
 }
+func configReplay(resp conf.Response) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if resp.ContentType != "" {
+			w.Header().Set("Content-Type", resp.ContentType)
+		} else {
+			if r.Header.Get("Accept") != "" {
+				w.Header().Set("Content-Type", r.Header.Get("Accept"))
+			} else {
+				w.Header().Set("Content-Type", "text/plain")
+			}
+		}
+		_, err := w.Write([]byte(resp.Content))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+	}
+}
 
 func echo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	_, _ = fmt.Fprint(w, common.Dump(r))
+	_, err := fmt.Fprint(w, common.Dump(r))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func body(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +142,7 @@ func body(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write(body)
 		w.WriteHeader(http.StatusOK)
 	} else {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -112,7 +150,11 @@ func void(w http.ResponseWriter, r *http.Request) {
 }
 
 func responseCode(w http.ResponseWriter, r *http.Request) {
-	code, _ := strconv.Atoi(mux.Vars(r)["code"])
+	code, err := strconv.Atoi(mux.Vars(r)["code"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(code)
 	log.Printf("%v: %v Code: %v\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], code)
 }
@@ -134,7 +176,12 @@ func randomCode(w http.ResponseWriter, r *http.Request) {
 }
 
 func randomSleep(w http.ResponseWriter, r *http.Request) {
-	sleep, _ := strconv.Atoi(mux.Vars(r)["sleep"])
+	sleep, err := strconv.Atoi(mux.Vars(r)["sleep"])
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	random := rand.Intn(sleep)
 
@@ -158,6 +205,30 @@ func replay(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", t)
 	}
 	if b, ok := replayBody[r.RequestURI]; ok {
-		_, _ = w.Write(b)
+		_, err := w.Write(b)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
+}
+
+func sortPaths(paths []string) {
+	sort.Slice(paths, func(i, j int) bool {
+		a := strings.Split(paths[i], "/")
+		b := strings.Split(paths[j], "/")
+
+		return comparePaths(a, b)
+	})
+}
+
+func comparePaths(a []string, b []string) bool {
+	if len(a) > 0 && len(b) > 0 {
+		if a[0] == b[0] {
+			return comparePaths(a[1:], b[1:])
+		}
+		return a[0] > b[0]
+	}
+
+	// a or be are not empty
+	return len(a) > 0
 }

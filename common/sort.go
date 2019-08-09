@@ -10,6 +10,7 @@ var (
 	pathSortWeight = regexp.MustCompile(`[a-zA_Z0-9]`)
 )
 
+// SortPaths sort the path string slice
 func SortPaths(paths []string) {
 	sort.Slice(paths, func(i, j int) bool {
 		a := strings.Split(paths[i], "/")

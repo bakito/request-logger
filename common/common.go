@@ -10,9 +10,11 @@ import (
 )
 
 const (
+	// HeaderReqNo http header
 	HeaderReqNo = "Request-No"
 )
 
+// Dump dump the request into a string
 func Dump(r *http.Request) string {
 	dump, err := httputil.DumpRequest(r, true)
 	if err != nil {

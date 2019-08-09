@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	headerTotalReqRows = "Total-Request-Rows"
+	headerTotalReqRows   = "Total-Request-Rows"
+	headerCurrentReqRows = "Current-Request-Rows"
 )
 
 var (
@@ -34,6 +35,7 @@ func init() {
 	dumpRequest = flag.Bool("dumpRequest", true, "Enable or disable the request dump")
 }
 
+// LogRequest logging middleware
 func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -55,6 +57,7 @@ func LogRequest(next http.Handler) http.Handler {
 	})
 }
 
+// CountReqRows row counting middleware
 func CountReqRows(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -69,6 +72,7 @@ func CountReqRows(next http.Handler) http.Handler {
 
 		allLines := add(reqRowCount, r, lines)
 		w.Header().Set(headerTotalReqRows, fmt.Sprintf("%v", allLines))
+		w.Header().Set(headerCurrentReqRows, fmt.Sprintf("%v", lines))
 
 		next.ServeHTTP(w, r)
 	})

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -19,8 +21,9 @@ import (
 )
 
 const (
-	defaultPort       int = 8080
-	headerTrainReplay     = "Train-Replay"
+	defaultPort         int = 8080
+	headerTrainReplay       = "Train-Replay"
+	headerLogBodyLength     = "Log-Body-Length"
 )
 
 var (
@@ -61,9 +64,9 @@ func main() {
 			paths = append(paths, path)
 		}
 
-		for _, path := range config.LogBody {
-			functions[path] = logBody
-			paths = append(paths, path)
+		for _, lb := range config.LogBody {
+			functions[lb.Path] = configLogBody(lb)
+			paths = append(paths, lb.Path)
 		}
 
 		for _, resp := range config.Replay {
@@ -109,6 +112,7 @@ func main() {
 	log.Printf("Running on port %v ...", *port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", *port), r))
 }
+
 func configReplay(resp conf.Response) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if resp.ContentType != "" {
@@ -145,12 +149,31 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func configLogBody(lb conf.LogBody) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.Header.Set(headerLogBodyLength, strconv.FormatBool(lb.LineLength))
+		logBody(w, r)
+	}
+}
+
 func logBody(w http.ResponseWriter, r *http.Request) {
+	length := r.Header.Get(headerLogBodyLength) == "true"
+
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err == nil {
-		log.Print(string(body))
+
+		scanner := bufio.NewScanner(bytes.NewReader(body))
+		for scanner.Scan() {
+
+			text := scanner.Text()
+			if length {
+				log.Printf("% 10d | %s", len(text), text)
+			} else {
+				log.Print(text)
+			}
+		}
 	} else {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

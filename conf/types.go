@@ -8,8 +8,13 @@ import (
 
 type Conf struct {
 	Echo    []string   `yaml:"echo,omitempty"`
-	LogBody []string   `yaml:"logBody,omitempty"`
+	LogBody []LogBody  `yaml:"logBody,omitempty"`
 	Replay  []Response `yaml:"replay,omitempty"`
+}
+
+type LogBody struct {
+	Path       string `yaml:"path"`
+	LineLength bool   `yaml:"lineLength"`
 }
 
 type Response struct {

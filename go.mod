@@ -24,4 +24,5 @@ require (
 	golang.org/x/crypto v0.0.0-20181203042331-505ab145d0a9 // indirect
 	golang.org/x/sys v0.0.0-20181213200352-4d1cda033e06 // indirect
 	google.golang.org/grpc v1.17.0 // indirect
+	gopkg.in/yaml.v2 v2.2.2
 )

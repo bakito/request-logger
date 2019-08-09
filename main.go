@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/bakito/request-logger/conf"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -34,25 +35,54 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.Handle("/metrics", promhttp.Handler())
+	config := conf.GetConf()
+	if config != nil {
 
-	r.HandleFunc("/echo", echo)
-	r.HandleFunc("/echo/{path:.*}", echo)
+		for _, path := range config.Echo {
+			r.HandleFunc(path, echo)
+		}
+		for _, path := range config.EchoBody {
+			r.HandleFunc(path, body)
+		}
 
-	r.HandleFunc(`/code/{code:[2,4,5]\d\d}`, responseCode)
-	r.HandleFunc(`/code/{code:[2,4,5]\d\d}/{path:.*}`, responseCode)
+		for _, resp := range config.Replay {
+			r.HandleFunc(resp.Path, func(w http.ResponseWriter, r *http.Request) {
+				if resp.ContentType != "" {
+					w.Header().Set("Content-Type", resp.ContentType)
+				} else {
+					w.Header().Set("Content-Type", "text/plain")
+				}
+				_, err := w.Write([]byte(resp.Content))
+				if err != nil {
+					w.WriteHeader(http.StatusOK)
+				} else {
+					w.WriteHeader(http.StatusOK)
+				}
+			})
+		}
+	} else {
+		r.Handle("/metrics", promhttp.Handler())
 
-	r.HandleFunc(`/random/code/{code:[2,4,5]\d\d}/{perc:1|(?:0(?:\.\d*)?)}`, randomCode)
-	r.HandleFunc(`/random/code/{code:[2,4,5]\d\d}/{perc:1|(?:0(?:\.\d*)?)}/{path:.*}`, randomCode)
+		r.HandleFunc("/echo", echo)
+		r.HandleFunc("/echo/{path:.*}", echo)
 
-	r.HandleFunc(`/random/sleep/{sleep:\d+}`, randomSleep)
-	r.HandleFunc(`/random/sleep/{sleep:\d+}/{path:.*}`, randomSleep)
+		r.HandleFunc("/body", body)
+		r.HandleFunc("/body/{path:.*}", body)
 
-	r.HandleFunc(`/replay`, replay)
-	r.HandleFunc(`/replay/{path:.*}`, replay)
+		r.HandleFunc(`/code/{code:[2,4,5]\d\d}`, responseCode)
+		r.HandleFunc(`/code/{code:[2,4,5]\d\d}/{path:.*}`, responseCode)
 
-	r.HandleFunc("/{path:.*}", void)
+		r.HandleFunc(`/random/code/{code:[2,4,5]\d\d}/{perc:1|(?:0(?:\.\d*)?)}`, randomCode)
+		r.HandleFunc(`/random/code/{code:[2,4,5]\d\d}/{perc:1|(?:0(?:\.\d*)?)}/{path:.*}`, randomCode)
 
+		r.HandleFunc(`/random/sleep/{sleep:\d+}`, randomSleep)
+		r.HandleFunc(`/random/sleep/{sleep:\d+}/{path:.*}`, randomSleep)
+
+		r.HandleFunc(`/replay`, replay)
+		r.HandleFunc(`/replay/{path:.*}`, replay)
+
+		r.HandleFunc("/{path:.*}", void)
+	}
 	r.Use(middleware.LogRequest)
 	if *countRequestRows {
 		r.Use(middleware.CountReqRows)
@@ -64,7 +94,18 @@ func main() {
 
 func echo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	fmt.Fprint(w, common.Dump(r))
+	_, _ = fmt.Fprint(w, common.Dump(r))
+}
+
+func body(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+	body, err := ioutil.ReadAll(r.Body)
+	if err == nil {
+		_, _ = w.Write(body)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func void(w http.ResponseWriter, r *http.Request) {
@@ -117,6 +158,6 @@ func replay(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", t)
 	}
 	if b, ok := replayBody[r.RequestURI]; ok {
-		w.Write(b)
+		_, _ = w.Write(b)
 	}
 }

@@ -33,6 +33,7 @@ var (
 func main() {
 	port := flag.Int("port", defaultPort, "the server port")
 	countRequestRows := flag.Bool("countRequestRows", true, "Enable or disable the request row count")
+	disableLogger := flag.Bool("disableLogger", false, "Disable the logger middleware")
 	configFile := flag.String("config", "", "The path of a config file")
 
 	flag.Parse()
@@ -62,7 +63,7 @@ func main() {
 			paths = append(paths, path)
 		}
 		for _, path := range config.EchoBody {
-			functions[path] = body
+			functions[path] = logBody
 			paths = append(paths, path)
 		}
 
@@ -82,8 +83,8 @@ func main() {
 		r.HandleFunc("/echo", echo)
 		r.HandleFunc("/echo/{path:.*}", echo)
 
-		r.HandleFunc("/body", body)
-		r.HandleFunc("/body/{path:.*}", body)
+		r.HandleFunc("/body", logBody)
+		r.HandleFunc("/body/{path:.*}", logBody)
 
 		r.HandleFunc(`/code/{code:[2,4,5]\d\d}`, responseCode)
 		r.HandleFunc(`/code/{code:[2,4,5]\d\d}/{path:.*}`, responseCode)
@@ -99,7 +100,9 @@ func main() {
 
 		r.HandleFunc("/{path:.*}", void)
 	}
-	r.Use(middleware.LogRequest)
+	if !*disableLogger {
+		r.Use(middleware.LogRequest)
+	}
 	if *countRequestRows {
 		r.Use(middleware.CountReqRows)
 	}
@@ -121,8 +124,6 @@ func configReplay(resp conf.Response) func(w http.ResponseWriter, r *http.Reques
 		_, err := w.Write([]byte(resp.Content))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
-		} else {
-			w.WriteHeader(http.StatusOK)
 		}
 	}
 }
@@ -135,12 +136,12 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func body(w http.ResponseWriter, r *http.Request) {
+func logBody(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
 	if err == nil {
-		_, _ = w.Write(body)
-		w.WriteHeader(http.StatusOK)
+		log.Print(string(body))
 	} else {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -199,6 +200,7 @@ func replay(w http.ResponseWriter, r *http.Request) {
 			replayBody[r.RequestURI] = body
 		}
 		replayContentType[r.RequestURI] = r.Header.Get("Content-Type")
+		defer r.Body.Close()
 	}
 
 	if t, ok := replayContentType[r.RequestURI]; ok {

@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"bufio"
+	"bytes"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/namsral/flag"
 
 	"github.com/bakito/request-logger/common"
 	"github.com/prometheus/client_golang/prometheus"
@@ -14,7 +14,6 @@ import (
 )
 
 const (
-	headerCurrCount    = "Current-Count"
 	headerTotalReqRows = "Total-Request-Rows"
 )
 
@@ -60,7 +59,10 @@ func CountReqRows(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		var lines float64
-		scanner := bufio.NewScanner(r.Body)
+
+		bodyBytes := common.GetBody(r)
+
+		scanner := bufio.NewScanner(bytes.NewReader(bodyBytes))
 		for scanner.Scan() {
 			lines++
 		}

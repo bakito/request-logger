@@ -1,7 +1,9 @@
 package common
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -20,7 +22,7 @@ func Dump(r *http.Request) string {
 	req := string(dump)
 
 	if r.RemoteAddr != "" {
-		// add remote addre after Host if available, otherwise after the first line
+		// add remote address after Host if available, otherwise after the first line
 		hi := strings.Index(req, "Host:")
 		if hi < 0 {
 			hi = 0
@@ -30,4 +32,12 @@ func Dump(r *http.Request) string {
 		req = fmt.Sprintf("%s\r\nRemoteAddr: %s%s", req[:hi+afterHost], r.RemoteAddr, req[hi+afterHost:])
 	}
 	return req
+}
+
+// GetBody get the content of the body, closes the read one and adds a new read closer to the request
+func GetBody(r *http.Request) []byte {
+	bodyBytes, _ := ioutil.ReadAll(r.Body)
+	r.Body.Close() //  must close
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	return bodyBytes
 }

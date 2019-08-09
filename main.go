@@ -7,9 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/bakito/request-logger/conf"
@@ -62,7 +60,8 @@ func main() {
 			functions[path] = echo
 			paths = append(paths, path)
 		}
-		for _, path := range config.EchoBody {
+
+		for _, path := range config.LogBody {
 			functions[path] = logBody
 			paths = append(paths, path)
 		}
@@ -72,7 +71,7 @@ func main() {
 			paths = append(paths, resp.Path)
 		}
 
-		sortPaths(paths)
+		common.SortPaths(paths)
 
 		log.Printf("Serving custom config from '%s'", *configFile)
 		for _, p := range paths {
@@ -121,7 +120,17 @@ func configReplay(resp conf.Response) func(w http.ResponseWriter, r *http.Reques
 				w.Header().Set("Content-Type", "text/plain")
 			}
 		}
-		_, err := w.Write([]byte(resp.Content))
+
+		var data []byte
+		var err error
+		if resp.BodyFile != "" {
+			data, err = ioutil.ReadFile(resp.BodyFile)
+		} else {
+			data = []byte(resp.Body)
+		}
+		if err == nil {
+			_, err = w.Write(data)
+		}
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -212,25 +221,4 @@ func replay(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
-}
-
-func sortPaths(paths []string) {
-	sort.Slice(paths, func(i, j int) bool {
-		a := strings.Split(paths[i], "/")
-		b := strings.Split(paths[j], "/")
-
-		return comparePaths(a, b)
-	})
-}
-
-func comparePaths(a []string, b []string) bool {
-	if len(a) > 0 && len(b) > 0 {
-		if a[0] == b[0] {
-			return comparePaths(a[1:], b[1:])
-		}
-		return a[0] > b[0]
-	}
-
-	// a or be are not empty
-	return len(a) > 0
 }

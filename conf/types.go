@@ -7,14 +7,15 @@ import (
 )
 
 type Conf struct {
-	Echo     []string   `yaml:"echo"`
-	EchoBody []string   `yaml:"echoBody"`
-	Replay   []Response `yaml:"replay"`
+	Echo    []string   `yaml:"echo,omitempty"`
+	LogBody []string   `yaml:"logBody,omitempty"`
+	Replay  []Response `yaml:"replay,omitempty"`
 }
 
 type Response struct {
 	Path        string `yaml:"path"`
-	Content     string `yaml:"content"`
+	Body        string `yaml:"body,omitempty"`
+	BodyFile    string `yaml:"bodyFile,omitempty"`
 	ContentType string `yaml:"contentType"`
 }
 

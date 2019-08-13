@@ -152,6 +152,9 @@ func echo(w http.ResponseWriter, r *http.Request) {
 func configLogBody(lb conf.LogBody) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set(headerLogBodyLength, strconv.FormatBool(lb.LineLength))
+		if lb.ResponseCode != 0 {
+			w.WriteHeader(lb.ResponseCode)
+		}
 		logBody(w, r)
 	}
 }

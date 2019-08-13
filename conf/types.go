@@ -15,8 +15,9 @@ type Conf struct {
 
 // LogBody config type
 type LogBody struct {
-	Path       string `yaml:"path"`
-	LineLength bool   `yaml:"lineLength"`
+	Path         string `yaml:"path"`
+	LineLength   bool   `yaml:"lineLength"`
+	ResponseCode int    `yaml:"responseCode"`
 }
 
 // Response config type

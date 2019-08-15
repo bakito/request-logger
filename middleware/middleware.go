@@ -3,7 +3,6 @@ package middleware
 import (
 	"bufio"
 	"bytes"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,39 +19,32 @@ const (
 
 var (
 	reqRowCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "request_body_row_count",
-		Help: "The current count rows in request body",
+		Name: "request_logger_request_body_row_count",
+		Help: "The total count rows in request body for a path",
 	}, []string{"path"})
 	currCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "request_current_count",
-		Help: "The current count of requests by path",
+		Name: "request_logger_request_count",
+		Help: "The count of requests by path",
 	}, []string{"path"})
-	dumpRequest *bool
 )
 
 func init() {
 	prometheus.MustRegister(currCount, reqRowCount)
-	dumpRequest = flag.Bool("dumpRequest", true, "Enable or disable the request dump")
+}
+
+// CountRequests count the number of requests per path
+func CountRequests(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		count := inc(currCount, r)
+		w.Header().Set(common.HeaderReqNo, fmt.Sprintf("%v", count))
+		next.ServeHTTP(w, r)
+	})
 }
 
 // LogRequest logging middleware
 func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		count := inc(currCount, r)
-
-		if *dumpRequest {
-			log.Printf("%v: %v\n%s\n", common.HeaderReqNo, count, common.Dump(r))
-		} else {
-			reqURI := r.RequestURI
-			if reqURI == "" {
-				reqURI = r.URL.RequestURI()
-			}
-			log.Printf("%v: %v\n%s %s HTTP/%d.%d\n", common.HeaderReqNo, count, valueOrDefault(r.Method, "GET"),
-				reqURI, r.ProtoMajor, r.ProtoMinor)
-		}
-
-		w.Header().Set(common.HeaderReqNo, fmt.Sprintf("%v", count))
+		log.Printf("%v: %v\n%s\n", common.HeaderReqNo, w.Header().Get(common.HeaderReqNo), common.Dump(r))
 		next.ServeHTTP(w, r)
 	})
 }

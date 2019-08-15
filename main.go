@@ -102,6 +102,9 @@ func main() {
 
 		r.HandleFunc("/{path:.*}", void)
 	}
+
+	r.Use(middleware.CountRequests)
+
 	if !*disableLogger {
 		r.Use(middleware.LogRequest)
 	}

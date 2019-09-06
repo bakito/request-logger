@@ -12,10 +12,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakito/request-logger/conf"
+	"github.com/bakito/request-logger/pkg/conf"
 
-	"github.com/bakito/request-logger/common"
-	"github.com/bakito/request-logger/middleware"
+	"github.com/bakito/request-logger/pkg/common"
+	"github.com/bakito/request-logger/pkg/middleware"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

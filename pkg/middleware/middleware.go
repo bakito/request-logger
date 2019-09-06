@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bakito/request-logger/common"
+	"github.com/bakito/request-logger/pkg/common"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
 )

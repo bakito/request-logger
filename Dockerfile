@@ -1,13 +1,13 @@
 FROM golang:1.13 as builder
 
-WORKDIR /go/src/github.com/bakito/request-logger
-
-COPY ./* /go/src/github.com/bakito/request-logger/
+WORKDIR /build
 
 RUN apt-get update && apt-get install -y xz-utils && \
   curl -SL --fail --silent --show-error https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz | tar --wildcards -xJ --strip-components 1 */upx
 
-ENV GOPROXY=https://goproxy.io \ 
+COPY . .
+
+ENV GOPROXY=https://goproxy.io \
     GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
@@ -25,4 +25,4 @@ EXPOSE 8080
 USER 1001
 ENTRYPOINT ["/go/bin/request-logger"]
 
-COPY --from=builder /go/src/github.com/bakito/request-logger/request-logger /go/bin/request-logger
+COPY --from=builder /build/request-logger /go/bin/request-logger

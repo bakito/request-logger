@@ -2,3 +2,4 @@ request-logger*
 debug
 .idea
 /conf.yaml
+*.exe

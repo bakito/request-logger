@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -28,6 +29,8 @@ const (
 var (
 	replayBody        = map[string][]byte{}
 	replayContentType = map[string]string{}
+	logger            *log.Logger
+	bw                *bufio.Writer
 )
 
 func main() {
@@ -35,6 +38,9 @@ func main() {
 	countRequestRows := flag.Bool("countRequestRows", true, "Enable or disable the request row count")
 	disableLogger := flag.Bool("disableLogger", false, "Disable the logger middleware")
 	configFile := flag.String("config", "", "The path of a config file")
+
+	bw = bufio.NewWriter(os.Stdout)
+	logger = log.New(bw, "", log.Ldate)
 
 	flag.Parse()
 
@@ -167,16 +173,15 @@ func logBody(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
+	defer bw.Flush()
 	if err == nil {
-
 		scanner := bufio.NewScanner(bytes.NewReader(body))
 		for scanner.Scan() {
-
 			text := scanner.Text()
 			if length {
-				log.Printf("% 10d | %s", len(text), text)
+				fmt.Printf("% 10d | %s\n", len(text), text)
 			} else {
-				log.Print(text)
+				fmt.Println(text)
 			}
 		}
 	} else {
@@ -194,7 +199,7 @@ func responseCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(code)
-	log.Printf("%v: %v Code: %v\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], code)
+	fmt.Printf("%v: %v Code: %v\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], code)
 }
 
 func randomCode(w http.ResponseWriter, r *http.Request) {
@@ -210,7 +215,7 @@ func randomCode(w http.ResponseWriter, r *http.Request) {
 		code = 200
 	}
 
-	log.Printf("%v: %v Code: %v\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], code)
+	fmt.Printf("%v: %v Code: %v\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], code)
 }
 
 func randomSleep(w http.ResponseWriter, r *http.Request) {
@@ -223,9 +228,9 @@ func randomSleep(w http.ResponseWriter, r *http.Request) {
 
 	random := rand.Intn(sleep)
 
-	log.Printf("%v: %v Sleep: %dms\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], random)
+	fmt.Printf("%v: %v Sleep: %dms\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], random)
 	time.Sleep(time.Duration(random) * time.Millisecond)
-	log.Printf("%v: %v Sleep: done\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0])
+	fmt.Printf("%v: %v Sleep: done\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0])
 }
 
 func replay(w http.ResponseWriter, r *http.Request) {

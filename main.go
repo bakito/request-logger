@@ -1,15 +1,12 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -29,7 +26,6 @@ const (
 var (
 	replayBody        = map[string][]byte{}
 	replayContentType = map[string]string{}
-	bw                *bufio.Writer
 )
 
 func main() {
@@ -37,8 +33,6 @@ func main() {
 	countRequestRows := flag.Bool("countRequestRows", true, "Enable or disable the request row count")
 	disableLogger := flag.Bool("disableLogger", false, "Disable the logger middleware")
 	configFile := flag.String("config", "", "The path of a config file")
-
-	bw = bufio.NewWriter(os.Stdout)
 
 	flag.Parse()
 
@@ -171,16 +165,11 @@ func logBody(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
-	defer bw.Flush()
 	if err == nil {
-		scanner := bufio.NewScanner(bytes.NewReader(body))
-		for scanner.Scan() {
-			text := scanner.Text()
-			if length {
-				fmt.Printf("% 10d | %s\n", len(text), text)
-			} else {
-				fmt.Println(text)
-			}
+		if length {
+			fmt.Printf("%10d | %s\n", len(body), string(body))
+		} else {
+			fmt.Println(string(body))
 		}
 	} else {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

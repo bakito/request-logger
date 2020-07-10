@@ -21,15 +21,14 @@ import (
 )
 
 const (
-	defaultPort         int = 8080
-	headerTrainReplay       = "Train-Replay"
-	headerLogBodyLength     = "Log-Body-Length"
+	defaultPort         = 8080
+	headerTrainReplay   = "Train-Replay"
+	headerLogBodyLength = "Log-Body-Length"
 )
 
 var (
 	replayBody        = map[string][]byte{}
 	replayContentType = map[string]string{}
-	logger            *log.Logger
 	bw                *bufio.Writer
 )
 
@@ -40,7 +39,6 @@ func main() {
 	configFile := flag.String("config", "", "The path of a config file")
 
 	bw = bufio.NewWriter(os.Stdout)
-	logger = log.New(bw, "", log.Ldate)
 
 	flag.Parse()
 

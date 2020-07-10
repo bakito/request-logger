@@ -81,10 +81,3 @@ func add(cVec *prometheus.CounterVec, r *http.Request, value float64) float64 {
 	c.Write(pb)
 	return pb.GetCounter().GetValue()
 }
-
-func valueOrDefault(value, def string) string {
-	if value != "" {
-		return value
-	}
-	return def
-}

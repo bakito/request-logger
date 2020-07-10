@@ -3,3 +3,4 @@ debug
 .idea
 /conf.yaml
 *.exe
+coverage.out

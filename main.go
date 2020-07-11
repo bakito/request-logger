@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -166,11 +169,30 @@ func logBody(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err == nil {
-		if length {
-			fmt.Printf("%10d | %s\n", len(body), string(body))
-		} else {
-			fmt.Println(string(body))
+		r := bufio.NewReader(bytes.NewReader(body))
+		lineNbr := 0
+		for {
+			line, _, err := r.ReadLine()
+
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				break
+			}
+
+			if length {
+				if lineNbr == 0 {
+					fmt.Printf("%10d | %s\n", len(body), line)
+				} else {
+					fmt.Printf("           | %s\n", line)
+				}
+				lineNbr++
+			} else {
+				fmt.Println(line)
+			}
 		}
+
 	} else {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

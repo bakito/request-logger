@@ -39,7 +39,7 @@ func Dump(r *http.Request) string {
 // GetBody get the content of the body, closes the read one and adds a new read closer to the request
 func GetBody(r *http.Request) []byte {
 	bodyBytes, _ := ioutil.ReadAll(r.Body)
-	r.Body.Close() //  must close
+	_ = r.Body.Close() //  must close
 	r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 	return bodyBytes
 }

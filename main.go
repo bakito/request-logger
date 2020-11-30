@@ -167,7 +167,7 @@ func logBody(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 	body, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 	if err == nil {
 		r := bufio.NewReader(bytes.NewReader(body))
 		lineNbr := 0
@@ -198,7 +198,7 @@ func logBody(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func void(w http.ResponseWriter, r *http.Request) {
+func void(_ http.ResponseWriter, _ *http.Request) {
 }
 
 func responseCode(w http.ResponseWriter, r *http.Request) {
@@ -251,7 +251,7 @@ func replay(w http.ResponseWriter, r *http.Request) {
 			replayBody[r.RequestURI] = body
 		}
 		replayContentType[r.RequestURI] = r.Header.Get("Content-Type")
-		defer r.Body.Close()
+		defer func() { _ = r.Body.Close() }()
 	}
 
 	if t, ok := replayContentType[r.RequestURI]; ok {

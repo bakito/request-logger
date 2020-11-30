@@ -78,6 +78,6 @@ func add(cVec *prometheus.CounterVec, r *http.Request, value float64) float64 {
 	c := cVec.WithLabelValues(r.RequestURI)
 	c.Add(value)
 	pb := &dto.Metric{}
-	c.Write(pb)
+	_ = c.Write(pb)
 	return pb.GetCounter().GetValue()
 }

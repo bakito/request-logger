@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"bytes"
@@ -16,7 +16,8 @@ var skippedHeaders = map[string]bool{
 	"Accept-Encoding": true,
 }
 
-func forwardFor(target string, disableLogger bool) func(w http.ResponseWriter, req *http.Request) {
+// ForwardFor forward and log request and response
+func ForwardFor(target string, disableLogger bool) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// we need to buffer the body if we want to read it here and send it
 		// in the request.

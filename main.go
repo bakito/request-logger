@@ -37,6 +37,8 @@ func main() {
 	disableLogger := flag.Bool("disableLogger", false, "Disable the logger middleware")
 	configFile := flag.String("config", "", "The path of a config file")
 
+	forwardURL := flag.String("forward", "", "forward the requests to")
+
 	flag.Parse()
 
 	r := mux.NewRouter()
@@ -58,7 +60,6 @@ func main() {
 	var paths []string
 
 	if config != nil {
-
 		for _, path := range config.Echo {
 			functions[path] = echo
 			paths = append(paths, path)
@@ -81,6 +82,8 @@ func main() {
 			r.HandleFunc(p, functions[p])
 		}
 
+	} else if forwardURL != nil && *forwardURL != "" {
+		r.HandleFunc("/{path:.*}", forwardFor(*forwardURL, disableLogger != nil && *disableLogger))
 	} else {
 		r.HandleFunc("/echo", echo)
 		r.HandleFunc("/echo/{path:.*}", echo)
@@ -146,7 +149,7 @@ func configReplay(resp conf.Response) func(w http.ResponseWriter, r *http.Reques
 
 func echo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
-	_, err := fmt.Fprint(w, common.Dump(r))
+	_, err := fmt.Fprint(w, common.DumpRequest(r))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

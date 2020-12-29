@@ -44,7 +44,7 @@ func CountRequests(next http.Handler) http.Handler {
 // LogRequest logging middleware
 func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%v: %v\n%s\n", common.HeaderReqNo, w.Header().Get(common.HeaderReqNo), common.Dump(r))
+		log.Printf("%s: %s\n%s\n", common.HeaderReqNo, w.Header().Get(common.HeaderReqNo), common.DumpRequest(r))
 		next.ServeHTTP(w, r)
 	})
 }

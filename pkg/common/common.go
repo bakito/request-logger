@@ -14,8 +14,8 @@ const (
 	HeaderReqNo = "Request-No"
 )
 
-// Dump dump the request into a string
-func Dump(r *http.Request) string {
+// DumpRequest dump the request into a string
+func DumpRequest(r *http.Request) string {
 	dump, err := httputil.DumpRequest(r, true)
 	if err != nil {
 		return ""
@@ -33,6 +33,18 @@ func Dump(r *http.Request) string {
 		afterHost := strings.Index(host, "\r\n")
 		req = fmt.Sprintf("%s\r\nRemoteAddr: %s%s", req[:hi+afterHost], r.RemoteAddr, req[hi+afterHost:])
 	}
+	return req
+}
+
+// DumpResponse dump the response into a string
+func DumpResponse(resp *http.Response) string {
+	dump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		return ""
+	}
+
+	req := string(dump)
+
 	return req
 }
 

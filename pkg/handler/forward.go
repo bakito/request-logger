@@ -42,6 +42,10 @@ func ForwardFor(target string, disableLogger bool) func(w http.ResponseWriter, r
 				proxyReq.Header[h] = val
 			}
 		}
+		proxyReq.Header.Set("X-Forwarded-Proto", req.Proto)
+		proxyReq.Header.Set("X-Forwarded-For", readUserIP(req))
+		proxyReq.Header.Add("X-Forwarded-Host", req.Host)
+
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
@@ -71,4 +75,14 @@ func ForwardFor(target string, disableLogger bool) func(w http.ResponseWriter, r
 		}
 		w.Write(respBody)
 	}
+}
+func readUserIP(r *http.Request) string {
+	IPAddress := r.Header.Get("X-Real-Ip")
+	if IPAddress == "" {
+		IPAddress = r.Header.Get("X-Forwarded-For")
+	}
+	if IPAddress == "" {
+		IPAddress = r.RemoteAddr
+	}
+	return IPAddress
 }

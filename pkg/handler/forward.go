@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
+	"github.com/bakito/request-logger/pkg/common"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
-
-	"github.com/bakito/request-logger/pkg/common"
+	"path"
+	"strings"
 )
 
 var skippedHeaders = map[string]bool{
@@ -31,8 +33,13 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 		req.Body = ioutil.NopCloser(bytes.NewReader(body))
 
 		// create a new url from the raw RequestURI sent by the client
-		url := fmt.Sprintf("%s/%s", target, req.URL.Path)
+		url := joinURL(target, req.URL.Path)
 		proxyReq, err := http.NewRequest(req.Method, url, bytes.NewReader(body))
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadGateway)
+			return
+		}
 
 		// We may want to filter some headers, otherwise we could just use a shallow copy
 		// proxyReq.Header = req.Header
@@ -51,19 +58,50 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 		proxyReq.Header.Set("X-Forwarded-For", readUserIP(req))
 		proxyReq.Header.Add("X-Forwarded-Host", req.Host)
 
+		for i, c := range req.Cookies() {
+			if i == 0 {
+				proxyReq.Header.Set("Cookie", c.String())
+			} else {
+				proxyReq.Header.Add("Cookie", c.String())
+			}
+		}
+
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
-		httpClient := &http.Client{Transport: tr}
+
+		httpClient := &http.Client{
+			Transport: tr,
+		}
 		resp, err := httpClient.Do(proxyReq)
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadGateway)
 			return
 		}
 		defer resp.Body.Close()
 
+		cookies := responseCookies(proxyReq, resp, req)
+		for i, c := range cookies {
+			if i == 0 {
+				resp.Header.Set("Set-Cookie", c.String())
+			} else {
+				resp.Header.Add("Set-Cookie", c.String())
+			}
+		}
+
 		if !disableLogger {
 			log.Printf("%s (Response): %s\n%s\n", common.HeaderReqNo, w.Header().Get(common.HeaderReqNo), common.DumpResponse(resp))
+		}
+
+		for k, vs := range resp.Header {
+			for i, v := range vs {
+				if i == 0 {
+					w.Header().Set(k, v)
+				} else {
+					w.Header().Add(k, v)
+				}
+			}
 		}
 
 		respBody, err := ioutil.ReadAll(resp.Body)
@@ -72,15 +110,22 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 			return
 		}
 
-		w.WriteHeader(resp.StatusCode)
-		for k, vs := range resp.Header {
-			for _, v := range vs {
-				w.Header().Add(k, v)
-			}
-		}
 		w.Write(respBody)
+		w.WriteHeader(resp.StatusCode)
 	}
 }
+
+func responseCookies(fromReq *http.Request, fromResp *http.Response, to *http.Request) []*http.Cookie {
+	host, _, _ := net.SplitHostPort(to.Host)
+	cookies := fromResp.Cookies()
+	for i := range cookies {
+		if fromReq.URL.Host == cookies[i].Domain {
+			cookies[i].Domain = host
+		}
+	}
+	return cookies
+}
+
 func readUserIP(r *http.Request) string {
 	IPAddress := r.Header.Get("X-Real-Ip")
 	if IPAddress == "" {
@@ -90,4 +135,9 @@ func readUserIP(r *http.Request) string {
 		IPAddress = r.RemoteAddr
 	}
 	return IPAddress
+}
+
+func joinURL(base string, paths ...string) string {
+	p := path.Join(paths...)
+	return fmt.Sprintf("%s/%s", strings.TrimRight(base, "/"), strings.TrimLeft(p, "/"))
 }

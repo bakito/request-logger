@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/bakito/request-logger/version"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"github.com/bakito/request-logger/pkg/conf"
 	"github.com/bakito/request-logger/pkg/handler"
 	"github.com/bakito/request-logger/pkg/middleware"
+	"github.com/bakito/request-logger/version"
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -28,7 +28,7 @@ var (
 var rootCmd = &cobra.Command{
 	Use:     "request-logger",
 	Version: version.Version,
-	Short:   "A brief description of your application",
+	Short:   "A Simple webserver allowing to log incoming requests",
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		var config *conf.Conf
@@ -132,6 +132,6 @@ func router() *mux.Router {
 }
 
 func start(r *mux.Router) {
-	log.Printf("Running on port %v ...", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%v", port), r))
+	log.Printf("Running on port %d ...", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
 }

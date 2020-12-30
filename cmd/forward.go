@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"log"
 
 	"github.com/bakito/request-logger/pkg/handler"
 	"github.com/spf13/cobra"
@@ -20,6 +21,8 @@ var forwardCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		r := router()
 		r.HandleFunc("/{path:.*}", handler.ForwardFor(args[0], disableLogger))
+
+		log.Printf("Forwarding requests to %s", args[0])
 		start(r)
 		return nil
 	},

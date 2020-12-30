@@ -22,6 +22,8 @@ var (
 	disableLogger    bool
 	metrics          bool
 	configFile       string
+	tlsKey           string
+	tlsCert          string
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -107,6 +109,8 @@ func init() {
 	rootCmd.PersistentFlags().IntVarP(&port, "port", "p", 8080, "Server port")
 	rootCmd.PersistentFlags().BoolVar(&disableLogger, "disableLogger", false, "Disable the logger middleware")
 	rootCmd.PersistentFlags().BoolVar(&metrics, "metrics", true, "Enable metrics")
+	rootCmd.PersistentFlags().StringVar(&tlsKey, "tlsKey", "", "TLS key file")
+	rootCmd.PersistentFlags().StringVar(&tlsCert, "tlsCert", "", "TLS cert file")
 
 	rootCmd.Flags().BoolVar(&countRequestRows, "countRequestRows", true, "Enable or disable the request row count")
 	rootCmd.Flags().StringVarP(&configFile, "config", "c", "", "The path of a config file")
@@ -132,6 +136,15 @@ func router() *mux.Router {
 }
 
 func start(r *mux.Router) {
-	log.Printf("Running on port %d ...", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
+	if withTLS() {
+		log.Printf("Running with TLS on port %d ...", port)
+		log.Fatal(http.ListenAndServeTLS(fmt.Sprintf(":%d", port), tlsCert, tlsKey, r))
+	} else {
+		log.Printf("Running on port %d ...", port)
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
+	}
+}
+
+func withTLS() bool {
+	return tlsKey != "" && tlsCert != ""
 }

@@ -17,7 +17,7 @@ var skippedHeaders = map[string]bool{
 }
 
 // ForwardFor forward and log request and response
-func ForwardFor(target string, disableLogger bool) func(w http.ResponseWriter, req *http.Request) {
+func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// we need to buffer the body if we want to read it here and send it
 		// in the request.
@@ -42,7 +42,12 @@ func ForwardFor(target string, disableLogger bool) func(w http.ResponseWriter, r
 				proxyReq.Header[h] = val
 			}
 		}
-		proxyReq.Header.Set("X-Forwarded-Proto", req.Proto)
+		if withTLS {
+			proxyReq.Header.Set("X-Forwarded-Proto", "https")
+		} else {
+			proxyReq.Header.Set("X-Forwarded-Proto", "http")
+		}
+
 		proxyReq.Header.Set("X-Forwarded-For", readUserIP(req))
 		proxyReq.Header.Add("X-Forwarded-Host", req.Host)
 

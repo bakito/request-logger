@@ -24,7 +24,7 @@ jobs:
         if: ${{ github.event.release.tag_name != '' }}
         with:
           push: true
-          tags: ghcr.io/bakito/rest2mqtt:latest,ghcr.io/bakito/rest2mqtt:${{ github.event.release.tag_name }}
+          tags: ghcr.io/bakito/request-logger:latest,ghcr.io/bakito/request-logger:${{ github.event.release.tag_name }}
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           build-args: VERSION=${{ github.event.release.tag_name }}
 
@@ -34,7 +34,7 @@ jobs:
         if: ${{ github.event.release.tag_name == '' }}
         with:
           push: true
-          tags: ghcr.io/bakito/rest2mqtt:master
+          tags: ghcr.io/bakito/request-logger:master
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           build-args: VERSION=master
       - name: Image digest

@@ -4,3 +4,4 @@ debug
 /conf.yaml
 *.exe
 coverage.out
+dist

@@ -15,3 +15,16 @@ tidy:
 test: tidy fmt vet
 	go test ./...  -coverprofile=coverage.out
 	go tool cover -func=coverage.out
+
+release: tools
+	@version=$$(semver); \
+	git tag -s $$version -m"Release $$version"
+	goreleaser --rm-dist
+
+test-release: tools
+	goreleaser --skip-publish --snapshot --rm-dist
+
+tools:
+ifeq (, $(shell which goreleaser))
+ $(shell go get github.com/goreleaser/goreleaser)
+endif

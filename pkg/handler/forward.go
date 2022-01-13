@@ -67,7 +67,8 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 		}
 
 		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
+			// #nosec G402 we allow insecure
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
 
 		httpClient := &http.Client{

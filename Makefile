@@ -1,7 +1,10 @@
-# Run go fmt against code
-fmt:
-	go fmt ./...
-	gofmt -s -w .
+# Run golangci-lint
+lint:
+	golangci-lint run
+
+# Run golangci-lint --fix
+fix-lint:
+	golangci-lint run --fix
 
 # Run go vet against code
 vet:
@@ -12,7 +15,7 @@ tidy:
 	go mod tidy
 
 # Run tests
-test: tidy fmt vet
+test: tidy lint
 	go test ./...  -coverprofile=coverage.out
 	go tool cover -func=coverage.out
 

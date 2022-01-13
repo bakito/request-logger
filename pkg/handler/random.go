@@ -16,7 +16,7 @@ func RandomCode(w http.ResponseWriter, r *http.Request) {
 	code, _ := strconv.Atoi(mux.Vars(r)["code"])
 	perc, _ := strconv.ParseFloat(mux.Vars(r)["perc"], 64)
 
-	random := rand.Float64() //nolint:gosec
+	random := rand.Float64() // #nosec G404 weak random number generator is ok
 
 	delta := random - perc
 	if delta <= 0.0 {
@@ -36,7 +36,7 @@ func RandomSleep(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	random := rand.Intn(sleep) //nolint:gosec
+	random := rand.Intn(sleep) // #nosec G404 weak random number generator is ok
 
 	fmt.Printf("%v: %v Sleep: %dms\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], random)
 	time.Sleep(time.Duration(random) * time.Millisecond)

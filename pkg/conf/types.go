@@ -30,7 +30,7 @@ type Response struct {
 
 // GetConf get the config from the given file
 func GetConf(configFile string) (*Conf, error) {
-	yamlFile, err := ioutil.ReadFile(configFile)
+	yamlFile, err := ioutil.ReadFile(configFile) // #nosec G304 load config file
 	if err != nil {
 		return nil, err
 	}

@@ -6,9 +6,7 @@ import (
 	"strings"
 )
 
-var (
-	pathSortWeight = regexp.MustCompile(`[a-zA_Z0-9]`)
-)
+var pathSortWeight = regexp.MustCompile(`[a-zA_Z0-9]`)
 
 // SortPaths sort the path string slice
 func SortPaths(paths []string) {
@@ -33,7 +31,6 @@ func comparePaths(a, b []string) bool {
 }
 
 func comparePath(a, b string) bool {
-
 	if len(a) > 0 && len(b) > 0 {
 		if a[0] == b[0] {
 			return comparePath(a[1:], b[1:])

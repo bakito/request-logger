@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
-	"github.com/bakito/request-logger/pkg/common"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"path"
 	"strings"
+
+	"github.com/bakito/request-logger/pkg/common"
 )
 
 var skippedHeaders = map[string]bool{
@@ -35,7 +36,6 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 		// create a new url from the raw RequestURI sent by the client
 		url := joinURL(target, req.URL.Path)
 		proxyReq, err := http.NewRequest(req.Method, url, bytes.NewReader(body))
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadGateway)
 			return
@@ -67,19 +67,20 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 		}
 
 		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec
 		}
 
 		httpClient := &http.Client{
 			Transport: tr,
 		}
 		resp, err := httpClient.Do(proxyReq)
-
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadGateway)
 			return
 		}
-		defer resp.Body.Close()
+		defer func() {
+			_ = resp.Body.Close()
+		}()
 
 		cookies := responseCookies(proxyReq, resp, req)
 		for i, c := range cookies {
@@ -110,7 +111,7 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 			return
 		}
 
-		w.Write(respBody)
+		_, _ = w.Write(respBody)
 		w.WriteHeader(resp.StatusCode)
 	}
 }

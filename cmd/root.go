@@ -32,13 +32,12 @@ var rootCmd = &cobra.Command{
 	Version: version.Version,
 	Short:   "A Simple webserver allowing to log incoming requests",
 	RunE: func(cmd *cobra.Command, args []string) error {
-
 		var config *conf.Conf
 		var err error
 		if configFile != "" {
 			config, err = conf.GetConf(configFile)
 			if err != nil {
-				return fmt.Errorf("error reading config %s: %v", configFile, err)
+				return fmt.Errorf("error reading config %s: %w", configFile, err)
 			}
 		}
 

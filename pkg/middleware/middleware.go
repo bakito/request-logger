@@ -52,7 +52,6 @@ func LogRequest(next http.Handler) http.Handler {
 // CountReqRows row counting middleware
 func CountReqRows(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		var lines float64
 
 		bodyBytes := common.GetBody(r)

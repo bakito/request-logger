@@ -16,7 +16,7 @@ func RandomCode(w http.ResponseWriter, r *http.Request) {
 	code, _ := strconv.Atoi(mux.Vars(r)["code"])
 	perc, _ := strconv.ParseFloat(mux.Vars(r)["perc"], 64)
 
-	random := rand.Float64()
+	random := rand.Float64() //nolint:gosec
 
 	delta := random - perc
 	if delta <= 0.0 {
@@ -31,13 +31,12 @@ func RandomCode(w http.ResponseWriter, r *http.Request) {
 // RandomSleep sleep randomly
 func RandomSleep(w http.ResponseWriter, r *http.Request) {
 	sleep, err := strconv.Atoi(mux.Vars(r)["sleep"])
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	random := rand.Intn(sleep)
+	random := rand.Intn(sleep) //nolint:gosec
 
 	fmt.Printf("%v: %v Sleep: %dms\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], random)
 	time.Sleep(time.Duration(random) * time.Millisecond)

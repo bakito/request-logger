@@ -60,19 +60,23 @@ var rootCmd = &cobra.Command{
 				paths = append(paths, resp.Path)
 			}
 
+			for _, path := range config.Void {
+				functions[path] = handler.Void
+				paths = append(paths, path)
+			}
+
 			common.SortPaths(paths)
 
 			log.Printf("Serving custom config from '%s'", configFile)
 			for _, p := range paths {
 				r.HandleFunc(p, functions[p])
 			}
-
 		} else {
 			r.HandleFunc("/echo", handler.Echo)
 			r.HandleFunc("/echo/{path:.*}", handler.Echo)
 
-			r.HandleFunc("/body", handler.LogBody)
-			r.HandleFunc("/body/{path:.*}", handler.LogBody)
+			r.HandleFunc("/body", handler.LogBody(false))
+			r.HandleFunc("/body/{path:.*}", handler.LogBody(false))
 
 			r.HandleFunc(`/code/{code:[2,4,5]\d\d}`, handler.ResponseCode)
 			r.HandleFunc(`/code/{code:[2,4,5]\d\d}/{path:.*}`, handler.ResponseCode)

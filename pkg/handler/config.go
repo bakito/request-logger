@@ -44,6 +44,6 @@ func ConfigLogBody(lb conf.LogBody) func(w http.ResponseWriter, r *http.Request)
 		if lb.ResponseCode != 0 {
 			w.WriteHeader(lb.ResponseCode)
 		}
-		LogBody(w, r)
+		LogBody(lb.AsString)(w, r)
 	}
 }

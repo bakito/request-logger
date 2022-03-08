@@ -11,6 +11,7 @@ type Conf struct {
 	Echo    []string   `yaml:"echo,omitempty"`
 	LogBody []LogBody  `yaml:"logBody,omitempty"`
 	Replay  []Response `yaml:"replay,omitempty"`
+	Void    []string   `yaml:"void,omitempty"`
 }
 
 // LogBody config type
@@ -18,6 +19,7 @@ type LogBody struct {
 	Path         string `yaml:"path"`
 	LineLength   bool   `yaml:"lineLength"`
 	ResponseCode int    `yaml:"responseCode"`
+	AsString     bool   `yaml:"asString"`
 }
 
 // Response config type

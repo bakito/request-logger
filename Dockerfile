@@ -11,7 +11,7 @@ ENV GOPROXY=https://goproxy.io \
     GOOS=linux \
     GOARCH=amd64
 RUN go build -a -installsuffix cgo -ldflags="-w -s" -o request-logger && \
-    upx --ultra-brute -q request-logger
+    upx -q request-logger
 
 # application image
 

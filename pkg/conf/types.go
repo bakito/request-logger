@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"io/ioutil"
+	"os"
 
 	"gopkg.in/yaml.v2"
 )
@@ -32,7 +32,7 @@ type Response struct {
 
 // GetConf get the config from the given file
 func GetConf(configFile string) (*Conf, error) {
-	yamlFile, err := ioutil.ReadFile(configFile) // #nosec G304 load config file
+	yamlFile, err := os.ReadFile(configFile) // #nosec G304 load config file
 	if err != nil {
 		return nil, err
 	}

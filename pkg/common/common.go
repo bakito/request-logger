@@ -3,7 +3,7 @@ package common
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -50,8 +50,8 @@ func DumpResponse(resp *http.Response) string {
 
 // GetBody get the content of the body, closes the read one and adds a new read closer to the request
 func GetBody(r *http.Request) []byte {
-	bodyBytes, _ := ioutil.ReadAll(r.Body)
+	bodyBytes, _ := io.ReadAll(r.Body)
 	_ = r.Body.Close() //  must close
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	return bodyBytes
 }

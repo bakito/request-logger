@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -19,7 +19,7 @@ func Replay(w http.ResponseWriter, r *http.Request) {
 	train := r.Header.Get(headerTrainReplay)
 
 	if train == "true" {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err == nil {
 			replayBody[r.RequestURI] = body
 		}

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -24,14 +24,14 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 	return func(w http.ResponseWriter, req *http.Request) {
 		// we need to buffer the body if we want to read it here and send it
 		// in the request.
-		body, err := ioutil.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		// you can reassign the body if you need to parse it as multipart
-		req.Body = ioutil.NopCloser(bytes.NewReader(body))
+		req.Body = io.NopCloser(bytes.NewReader(body))
 
 		// create a new url from the raw RequestURI sent by the client
 		url := joinURL(target, req.URL.Path)
@@ -106,7 +106,7 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 			}
 		}
 
-		respBody, err := ioutil.ReadAll(resp.Body)
+		respBody, err := io.ReadAll(resp.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

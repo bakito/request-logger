@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -21,7 +20,7 @@ func LogBody(logAsString bool) func(w http.ResponseWriter, r *http.Request) {
 		logAsString = logAsString || r.Header.Get(headerBodyAsString) == "true"
 
 		w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		defer func() { _ = r.Body.Close() }()
 		if err == nil {
 			r := bufio.NewReader(bytes.NewReader(body))

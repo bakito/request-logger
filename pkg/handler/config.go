@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/bakito/request-logger/pkg/conf"
@@ -24,7 +24,7 @@ func ConfigReplay(resp conf.Response) func(w http.ResponseWriter, r *http.Reques
 		var data []byte
 		var err error
 		if resp.BodyFile != "" {
-			data, err = ioutil.ReadFile(resp.BodyFile)
+			data, err = os.ReadFile(resp.BodyFile)
 		} else {
 			data = []byte(resp.Body)
 		}

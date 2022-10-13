@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/bakito/request-logger/pkg/common"
 	"github.com/bakito/request-logger/pkg/conf"
@@ -139,12 +140,17 @@ func router() *mux.Router {
 }
 
 func start(r *mux.Router) {
+	srv := &http.Server{
+		Addr:              fmt.Sprintf(":%d", port),
+		Handler:           r,
+		ReadHeaderTimeout: 1 * time.Second,
+	}
 	if withTLS() {
 		log.Printf("Running with TLS on port %d ...", port)
-		log.Fatal(http.ListenAndServeTLS(fmt.Sprintf(":%d", port), tlsCert, tlsKey, r))
+		log.Fatal(srv.ListenAndServeTLS(tlsCert, tlsKey))
 	} else {
 		log.Printf("Running on port %d ...", port)
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), r))
+		log.Fatal(srv.ListenAndServe())
 	}
 }
 

@@ -148,10 +148,10 @@ func start(r *mux.Router) {
 	if withTLS() {
 		log.Printf("Running with TLS on port %d ...", port)
 		log.Fatal(srv.ListenAndServeTLS(tlsCert, tlsKey))
-	} else {
-		log.Printf("Running on port %d ...", port)
-		log.Fatal(srv.ListenAndServe())
 	}
+
+	log.Printf("Running on port %d ...", port)
+	log.Fatal(srv.ListenAndServe())
 }
 
 func withTLS() bool {

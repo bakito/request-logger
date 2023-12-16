@@ -8,7 +8,7 @@ A small go webserver logging all requests
 ## Run
 
 ```bash
-docker run -p 8080:8080 quay.io/bakito/request-logger
+docker run -p 8080:8080 ghcr.io/bakito/request-logger
 ```
 
 ## Paths

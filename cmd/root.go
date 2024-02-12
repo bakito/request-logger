@@ -32,7 +32,7 @@ var rootCmd = &cobra.Command{
 	Use:     "request-logger",
 	Version: version.Version,
 	Short:   "A Simple webserver allowing to log incoming requests",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		var config *conf.Conf
 		var err error
 		if configFile != "" {

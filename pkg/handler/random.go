@@ -8,11 +8,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bakito/request-logger/pkg/common"
 	"github.com/gorilla/mux"
+
+	"github.com/bakito/request-logger/pkg/common"
 )
 
-// RandomCode return a random response code
+// RandomCode return a random response code.
 func RandomCode(w http.ResponseWriter, r *http.Request) {
 	code, _ := strconv.Atoi(mux.Vars(r)["code"])
 	perc, _ := strconv.ParseFloat(mux.Vars(r)["perc"], 64)
@@ -33,7 +34,7 @@ func RandomCode(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%v: %v Code: %v\n", common.HeaderReqNo, w.Header()[common.HeaderReqNo][0], code)
 }
 
-// RandomSleep sleep randomly
+// RandomSleep sleep randomly.
 func RandomSleep(w http.ResponseWriter, r *http.Request) {
 	sleep, err := strconv.ParseInt(mux.Vars(r)["sleep"], 0, 64)
 	if err != nil {

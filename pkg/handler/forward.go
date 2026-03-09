@@ -19,8 +19,8 @@ var skippedHeaders = map[string]bool{
 	"Accept-Encoding": true,
 }
 
-// ForwardFor forward and log request and response
-func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.ResponseWriter, req *http.Request) {
+// ForwardFor forward and log request and response.
+func ForwardFor(target string, disableLogger, withTLS bool) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// we need to buffer the body if we want to read it here and send it
 		// in the request.
@@ -35,7 +35,7 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 
 		// create a new url from the raw RequestURI sent by the client
 		url := joinURL(target, req.URL.Path)
-		proxyReq, err := http.NewRequest(req.Method, url, bytes.NewReader(body))
+		proxyReq, err := http.NewRequestWithContext(req.Context(), req.Method, url, bytes.NewReader(body))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadGateway)
 			return
@@ -93,7 +93,12 @@ func ForwardFor(target string, disableLogger bool, withTLS bool) func(w http.Res
 		}
 
 		if !disableLogger {
-			log.Printf("%s (Response): %s\n%s\n", common.HeaderReqNo, w.Header().Get(common.HeaderReqNo), common.DumpResponse(resp))
+			log.Printf(
+				"%s (Response): %s\n%s\n",
+				common.HeaderReqNo,
+				w.Header().Get(common.HeaderReqNo),
+				common.DumpResponse(resp),
+			)
 		}
 
 		for k, vs := range resp.Header {
@@ -129,14 +134,14 @@ func responseCookies(fromReq *http.Request, fromResp *http.Response, to *http.Re
 }
 
 func readUserIP(r *http.Request) string {
-	IPAddress := r.Header.Get("X-Real-Ip")
-	if IPAddress == "" {
-		IPAddress = r.Header.Get("X-Forwarded-For")
+	ipAddress := r.Header.Get("X-Real-IP")
+	if ipAddress == "" {
+		ipAddress = r.Header.Get("X-Forwarded-For")
 	}
-	if IPAddress == "" {
-		IPAddress = r.RemoteAddr
+	if ipAddress == "" {
+		ipAddress = r.RemoteAddr
 	}
-	return IPAddress
+	return ipAddress
 }
 
 func joinURL(base string, paths ...string) string {

@@ -13,7 +13,7 @@ const (
 	headerBodyAsString  = "Log-Body-As-String"
 )
 
-// LogBody log the body
+// LogBody log the body.
 func LogBody(logAsString bool) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		length := r.Header.Get(headerLogBodyLength) == "true"
@@ -46,14 +46,13 @@ func LogBody(logAsString bool) func(w http.ResponseWriter, r *http.Request) {
 					fmt.Println(asString(line, logAsString))
 				}
 			}
-
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	}
 }
 
-func asString(data []byte, asString bool) interface{} {
+func asString(data []byte, asString bool) any {
 	if asString {
 		return string(data)
 	}

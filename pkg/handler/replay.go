@@ -14,7 +14,7 @@ var (
 	replayContentType = map[string]string{}
 )
 
-// Replay replay
+// Replay replay.
 func Replay(w http.ResponseWriter, r *http.Request) {
 	train := r.Header.Get(headerTrainReplay)
 
@@ -34,6 +34,7 @@ func Replay(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write(b)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 }

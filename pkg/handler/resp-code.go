@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/bakito/request-logger/pkg/common"
 	"github.com/gorilla/mux"
+
+	"github.com/bakito/request-logger/pkg/common"
 )
 
-// ResponseCode  return the provided resp code
+// ResponseCode  return the provided resp code.
 func ResponseCode(w http.ResponseWriter, r *http.Request) {
 	code, err := strconv.Atoi(mux.Vars(r)["code"])
 	if err != nil {

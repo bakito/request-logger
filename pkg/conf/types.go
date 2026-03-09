@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Conf type to define custom request mapping
+// Conf type to define custom request mapping.
 type Conf struct {
 	Echo    []string   `yaml:"echo,omitempty"`
 	LogBody []LogBody  `yaml:"logBody,omitempty"`
@@ -14,7 +14,7 @@ type Conf struct {
 	Void    []string   `yaml:"void,omitempty"`
 }
 
-// LogBody config type
+// LogBody config type.
 type LogBody struct {
 	Path         string `yaml:"path"`
 	LineLength   bool   `yaml:"lineLength"`
@@ -22,7 +22,7 @@ type LogBody struct {
 	AsString     bool   `yaml:"asString"`
 }
 
-// Response config type
+// Response config type.
 type Response struct {
 	Path        string `yaml:"path"`
 	Body        string `yaml:"body,omitempty"`
@@ -30,7 +30,7 @@ type Response struct {
 	ContentType string `yaml:"contentType"`
 }
 
-// GetConf get the config from the given file
+// GetConf get the config from the given file.
 func GetConf(configFile string) (*Conf, error) {
 	yamlFile, err := os.ReadFile(configFile) // #nosec G304 load config file
 	if err != nil {

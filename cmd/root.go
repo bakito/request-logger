@@ -7,14 +7,15 @@ import (
 	"os"
 	"time"
 
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/spf13/cobra"
+
 	"github.com/bakito/request-logger/pkg/common"
 	"github.com/bakito/request-logger/pkg/conf"
 	"github.com/bakito/request-logger/pkg/handler"
 	"github.com/bakito/request-logger/pkg/middleware"
 	"github.com/bakito/request-logger/version"
-	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -27,7 +28,7 @@ var (
 	tlsCert          string
 )
 
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:     "request-logger",
 	Version: version.Version,

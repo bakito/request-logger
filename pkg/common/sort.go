@@ -2,23 +2,23 @@ package common
 
 import (
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 )
 
 var pathSortWeight = regexp.MustCompile(`[a-zA_Z0-9]`)
 
-// SortPaths sort the path string slice
+// SortPaths sort the path string slice.
 func SortPaths(paths []string) {
-	sort.Slice(paths, func(i, j int) bool {
-		a := strings.Split(paths[i], "/")
-		b := strings.Split(paths[j], "/")
+	slices.SortFunc(paths, func(a, b string) int {
+		aa := strings.Split(a, "/")
+		bb := strings.Split(b, "/")
 
-		return comparePaths(a, b)
+		return comparePaths(aa, bb)
 	})
 }
 
-func comparePaths(a, b []string) bool {
+func comparePaths(a, b []string) int {
 	if len(a) > 0 && len(b) > 0 {
 		if a[0] == b[0] {
 			return comparePaths(a[1:], b[1:])
@@ -27,11 +27,14 @@ func comparePaths(a, b []string) bool {
 	}
 
 	// a or be are not empty
-	return len(a) > 0
+	if len(a) == 0 {
+		return -1
+	}
+	return 1
 }
 
-func comparePath(a, b string) bool {
-	if len(a) > 0 && len(b) > 0 {
+func comparePath(a, b string) int {
+	if a != "" && b != "" {
 		if a[0] == b[0] {
 			return comparePath(a[1:], b[1:])
 		}
@@ -40,11 +43,14 @@ func comparePath(a, b string) bool {
 		bb := pathSortWeight.MatchString(string(b[0]))
 
 		if aa && bb {
-			return a[0] > b[0]
+			return strings.Compare(string(a[0]), string(b[0]))
 		}
-		return aa
+		return 1
 	}
 
 	// a or be are not empty
-	return len(a) > 0
+	if a != "" {
+		return -1
+	}
+	return 1
 }

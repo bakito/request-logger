@@ -4,11 +4,12 @@ import (
 	"errors"
 	"log"
 
-	"github.com/bakito/request-logger/pkg/handler"
 	"github.com/spf13/cobra"
+
+	"github.com/bakito/request-logger/pkg/handler"
 )
 
-// forwardCmd represents the forward command
+// forwardCmd represents the forward command.
 var forwardCmd = &cobra.Command{
 	Use:   "forward <target URL>",
 	Short: "Forward requests to a different URL, logging all requests and responses",

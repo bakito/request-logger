@@ -8,7 +8,7 @@ import (
 	"github.com/bakito/request-logger/pkg/conf"
 )
 
-// ConfigReplay replay from config
+// ConfigReplay replay from config.
 func ConfigReplay(resp conf.Response) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if resp.ContentType != "" {
@@ -33,11 +33,12 @@ func ConfigReplay(resp conf.Response) func(w http.ResponseWriter, r *http.Reques
 		}
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 }
 
-// ConfigLogBody log body from config file
+// ConfigLogBody log body from config file.
 func ConfigLogBody(lb conf.LogBody) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Header.Set(headerLogBodyLength, strconv.FormatBool(lb.LineLength))

@@ -7,9 +7,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bakito/request-logger/pkg/common"
 	"github.com/prometheus/client_golang/prometheus"
 	dto "github.com/prometheus/client_model/go"
+
+	"github.com/bakito/request-logger/pkg/common"
 )
 
 const (
@@ -19,11 +20,11 @@ const (
 
 var (
 	reqRowCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "request_logger_request_body_row_count",
+		Name: "request_logger_request_body_row_count_total",
 		Help: "The total count rows in request body for a path",
 	}, []string{"path"})
 	currCount = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "request_logger_request_count",
+		Name: "request_logger_request_count_total",
 		Help: "The count of requests by path",
 	}, []string{"path"})
 )
@@ -32,7 +33,7 @@ func init() {
 	prometheus.MustRegister(currCount, reqRowCount)
 }
 
-// CountRequests count the number of requests per path
+// CountRequests count the number of requests per path.
 func CountRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		count := inc(currCount, r)
@@ -41,7 +42,7 @@ func CountRequests(next http.Handler) http.Handler {
 	})
 }
 
-// LogRequest logging middleware
+// LogRequest logging middleware.
 func LogRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s: %s\n%s\n", common.HeaderReqNo, w.Header().Get(common.HeaderReqNo), common.DumpRequest(r))
@@ -49,7 +50,7 @@ func LogRequest(next http.Handler) http.Handler {
 	})
 }
 
-// CountReqRows row counting middleware
+// CountReqRows row counting middleware.
 func CountReqRows(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var lines float64

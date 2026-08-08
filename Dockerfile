@@ -5,8 +5,7 @@ WORKDIR /build
 RUN apk update && apk add upx
 COPY . .
 
-ENV GOPROXY=https://goproxy.io \
-    GO111MODULE=on \
+ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux
 RUN go build -a -installsuffix cgo -ldflags="-w -s" -o request-logger && \

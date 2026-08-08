@@ -2,7 +2,9 @@ FROM golang:1.26-alpine AS builder
 
 WORKDIR /build
 
-RUN apk update && apk add upx
+# Update git to a newer version that supports --end-of-options
+RUN apk update && apk add --upgrade git upx
+
 COPY . .
 
 ENV GOPROXY=https://goproxy.io \

@@ -2,7 +2,9 @@ name: Build Image
 
 on:
   push:
-    branches: master
+    branches: 
+     - master
+     - fix/upgrade-git-alpine
   release:
     types:
       - published

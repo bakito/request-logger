@@ -1,9 +1,8 @@
-FROM golang:1.26-alpine AS builder
+FROM golang:1.26-alpine3.20 AS builder
 
 WORKDIR /build
 
-# Update git to a newer version that supports --end-of-options
-RUN apk update && apk add --upgrade git upx
+RUN apk update && apk add upx
 
 COPY . .
 
